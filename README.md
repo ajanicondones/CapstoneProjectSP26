@@ -19,3 +19,16 @@ Frontend Development (Streamlit Dashboard)
 Data Visualization
 UI/UX Design
 CI/CD Setup
+
+## Problem Statement
+Many communities lack equal access to financial services, leading to gaps in economic growth and opportunity. This project aims to analyze economic data to identify patterns of inequality and highlight areas needing improvement.
+## Social Impact
+This project helps:
+- Identify underserved communities
+- Support data-driven policy decisions
+- Promote financial inclusion and economic growth
+- Raise awareness about economic inequality
+## Dataset
+Source: Mastercard Center for Inclusive Growth / World Bank / Kaggle
+Description: Data includes financial access, transaction activity, and economic indicators
+Justification: This dataset allows us to uncover trends in financial inclusion and economic participation
