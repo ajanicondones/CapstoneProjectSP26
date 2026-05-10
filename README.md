@@ -50,4 +50,4 @@ uvicorn main:app --reload
 
 4.Run Frontend
 cd Frontend-Healthcare/src/Frontend
-uvicorn main:app --reload
+streamlit run dashboard.py
