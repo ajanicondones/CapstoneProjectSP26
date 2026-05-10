@@ -43,3 +43,11 @@ source .venv/bin/activate   # Mac/Linux
 2.Install Dependencies
 pip install -r requirements.txt
 
+3.Run Backend 
+cd Frontend-Healthcare/src/backend
+uvicorn main:app --reload
+
+
+4.Run Frontend
+cd Frontend-Healthcare/src/Frontend
+uvicorn main:app --reload
