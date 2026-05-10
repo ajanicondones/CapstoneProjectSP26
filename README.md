@@ -32,3 +32,14 @@ This project helps:
 Source: Mastercard Center for Inclusive Growth / World Bank / Kaggle
 Description: Data includes financial access, transaction activity, and economic indicators
 Justification: This dataset allows us to uncover trends in financial inclusion and economic participation
+
+SETUP
+
+1.Create Virtual Environment
+python3 -m venv .venv
+source .venv/bin/activate   # Mac/Linux
+
+
+2.Install Dependencies
+pip install -r requirements.txt
+

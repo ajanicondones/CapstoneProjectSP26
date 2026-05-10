@@ -3,3 +3,5 @@ plotly
 pandas
 requests
 flake8
+sqlalchemy
+pydantic
