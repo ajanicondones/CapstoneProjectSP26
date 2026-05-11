@@ -40,6 +40,20 @@ def load_csv_to_db():
 
 load_csv_to_db()
 
+@app.get("/data")
+def get_data(db: Session = Depends(get_db)):
+
+    data = db.query(Health).all()
+
+    return [
+        {
+            "IndicatorName": row.indicator_name,
+            "Location": row.location,
+            "Year": row.year,
+            "NumericValue": row.numeric_value
+        }
+        for row in data
+    ]
 
 @app.get("/life-expectancy/{country}")
 def get_life_expectancy(country: str, db: Session = Depends(get_db)):
@@ -55,17 +69,54 @@ def get_life_expectancy(country: str, db: Session = Depends(get_db)):
     ]
 
 
-@app.get("/data")
-def get_data(db: Session = Depends(get_db)):
 
-    data = db.query(Health).all()
+
+# get all indicators
+@app.get("/indicators")
+def get_indicators(db: Session = Depends(get_db)):
+
+    indicators = db.query(Health.indicator_name).distinct().all()
+
+    return {
+        "indicators": sorted([indicator[0] for indicator in indicators])
+    }
+
+# get average value of indicator
+@app.get("/average/{indicator}")
+def get_average_indicator(indicator: str,
+                          db: Session = Depends(get_db)):
+
+    data = db.query(Health).filter(
+        Health.indicator_name == indicator
+    ).all()
+
+    if not data:
+        return {"message": "No data found"}
+
+    average = sum(row.numeric_value for row in data) / len(data)
+
+    return {
+        "indicator": indicator,
+        "average": round(average, 2)
+    }
+
+
+
+# top countries for a specific indicator
+@app.get("/top/{indicator}")
+def get_top_countries(indicator: str,
+                      limit: int = 10,
+                      db: Session = Depends(get_db)):
+
+    data = db.query(Health).filter(
+        Health.indicator_name == indicator
+    ).order_by(Health.numeric_value.desc()).limit(limit).all()
 
     return [
         {
-            "IndicatorName": row.indicator_name,
-            "Location": row.location,
-            "Year": row.year,
-            "NumericValue": row.numeric_value
+            "country": row.location,
+            "year": row.year,
+            "value": row.numeric_value
         }
         for row in data
     ]
