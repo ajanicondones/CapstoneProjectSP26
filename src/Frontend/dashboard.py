@@ -64,6 +64,33 @@ def load_csv():
     raw["NumericValue"] = pd.to_numeric(raw["NumericValue"], errors="coerce")
     return raw.dropna(subset=["NumericValue"])
 
+@st.cache_data
+def fetch_indicators():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/indicators", timeout=3)
+        resp.raise_for_status()
+        return resp.json().get("indicators", INDICATORS)
+    except Exception:
+        return INDICATORS
+
+@st.cache_data
+def fetch_average(indicator):
+    try:
+        resp = requests.get(f"{BACKEND_URL}/average/{indicator}", timeout=3)
+        resp.raise_for_status()
+        return resp.json().get("average", None)
+    except Exception:
+        return None
+
+@st.cache_data
+def fetch_top_countries(indicator, limit=10):
+    try:
+        resp = requests.get(f"{BACKEND_URL}/top/{indicator}", params={"limit": limit}, timeout=3)
+        resp.raise_for_status()
+        return pd.DataFrame(resp.json())
+    except Exception:
+        return None
+
 def load_data():
     try:
         resp = requests.get(f"{BACKEND_URL}/data", timeout=3)
@@ -86,9 +113,15 @@ df_full = load_data()
 
 st.title("WHO Health Dashboard")
 
-st.sidebar.markdown("### Filters")
-indicators = sorted(df_full["IndicatorName"].unique())
-selected_indicator = st.sidebar.selectbox("Select Indicator", indicators)
+st.sidebar.markdown("Filters")
+indicators = fetch_indicators()
+filtered_indicators = [i for i in indicators if i in INDICATORS]
+selected_indicator = st.sidebar.selectbox("Select Indicator", filtered_indicators)
+
+avg = fetch_average(selected_indicator)
+if avg:
+    st.sidebar.markdown("---")
+    st.sidebar.metric("Global Average", f"{avg:.2f}")
 
 st.sidebar.markdown("---")
 df_export = df_full[df_full["IndicatorName"] == selected_indicator].copy()
@@ -104,14 +137,20 @@ st.caption(f"Showing: {selected_indicator} | {len(df):,} rows")
 
 df_agg = df.groupby(["Location", "Year"], as_index=False)["NumericValue"].mean()
 
-top10 = (
-    df_agg.groupby("Location")["NumericValue"]
-    .mean()
-    .sort_values(ascending=False)
-    .head(10)
-    .reset_index()
-)
-top10["Rank"] = range(1, 11)
+top_df = fetch_top_countries(selected_indicator, limit=10)
+if top_df is not None and not top_df.empty:
+    top_df = top_df.rename(columns={"country": "Location", "value": "NumericValue"})
+    top_df["Year"] = top_df["year"]
+    top10 = top_df[["Location", "NumericValue"]].groupby("Location").mean().sort_values("NumericValue", ascending=False).head(10).reset_index()
+else:
+    top10 = (
+        df_agg.groupby("Location")["NumericValue"]
+        .mean()
+        .sort_values(ascending=False)
+        .head(10)
+        .reset_index()
+    )
+top10["Rank"] = range(1, len(top10) + 1)
 
 y_label = get_y_label(selected_indicator)
 
